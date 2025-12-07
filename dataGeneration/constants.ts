@@ -1,5 +1,5 @@
 
-export const TOTAL_FEATURES: number = 100;
+export const TOTAL_FEATURES: number = 250000;
 export const OUTPUT_PATH = 'data/sampleData.geojson';
 
 export const RATIOS = {
@@ -12,4 +12,4 @@ export const NUM_GEOFENCES = Math.floor(TOTAL_FEATURES * RATIOS.GEOFENCE);
 export const NUM_TRIPS = Math.floor(TOTAL_FEATURES * RATIOS.TRIP);
 export const NUM_STOPS = TOTAL_FEATURES - NUM_GEOFENCES - NUM_TRIPS; 
 
-export const NZ_BBOX: [number, number, number, number] = [174.75, -36.85, 174.775, -36.83];
+export const NZ_BBOX: [number, number, number, number] = [166, -47, 179, -34];

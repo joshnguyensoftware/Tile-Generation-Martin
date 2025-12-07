@@ -12,7 +12,9 @@ export const MAP_CONFIG = {
         },
 
         CUSTOM_TILES: {
-            url: 'http://localhost:8080/{z}/{x}/{y}.pbf',
+            id: "martin",
+            name: "Martin Custom Tiles",
+            url: 'http://localhost:3000/nz_data/{z}/{x}/{y}',
             minZoom: 0,
             maxZoom: 14
         }

@@ -14,8 +14,6 @@ export const MAP_SOURCES: Record<string, SourceSpecification> = {
     "custom-tiles": {
         type: "vector",
         tiles: [MAP_CONFIG.sources.CUSTOM_TILES.url],
-        minzoom: MAP_CONFIG.sources.CUSTOM_TILES.minZoom,
-        maxzoom: MAP_CONFIG.sources.CUSTOM_TILES.maxZoom
     }
 } 
 
@@ -33,7 +31,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "geofences-layer",
         type: "fill",
         source: "custom-tiles",
-        'source-layer': LAYER_IDS.geofences,
+        'source-layer': 'nz_data',
         paint: { "fill-color": "#ff0000",
                  "fill-opacity": 0.5 },
         filter: ["==", "$type", "Polygon"]
@@ -43,7 +41,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "trips-layer",
         type: "line",
         source: "custom-tiles",
-        'source-layer': LAYER_IDS.trips,
+        'source-layer': 'nz_data',
         paint: {
             "line-color": "#0000ff",
             "line-width": 2
@@ -55,7 +53,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "stops-layer",
         type: "circle",
         source: "custom-tiles",
-        'source-layer': LAYER_IDS.stops,
+        'source-layer': 'nz_data',
         paint: {
             "circle-color": "#00ff00",
             "circle-radius": 4
