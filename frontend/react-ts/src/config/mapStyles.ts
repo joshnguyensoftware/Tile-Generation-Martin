@@ -31,7 +31,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "geofences-layer",
         type: "fill",
         source: "custom-tiles",
-        'source-layer': 'nz_data',
+        'source-layer': 'geofence_org_63908dd6',
         paint: { "fill-color": "#ff0000",
                  "fill-opacity": 0.5 },
         filter: ["==", "$type", "Polygon"]
@@ -41,7 +41,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "trips-layer",
         type: "line",
         source: "custom-tiles",
-        'source-layer': 'nz_data',
+        'source-layer': 'geofence',
         paint: {
             "line-color": "#0000ff",
             "line-width": 2
@@ -53,7 +53,7 @@ export const MAP_LAYERS: LayerSpecification[] = [
         id: "stops-layer",
         type: "circle",
         source: "custom-tiles",
-        'source-layer': 'nz_data',
+        'source-layer': 'geofence',
         paint: {
             "circle-color": "#00ff00",
             "circle-radius": 4
