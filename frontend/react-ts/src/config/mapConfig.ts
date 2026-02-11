@@ -14,7 +14,7 @@ export const MAP_CONFIG = {
         CUSTOM_TILES: {
             id: "martin",
             name: "Martin Custom Tiles",
-            url: 'http://localhost:3000/nz_data/{z}/{x}/{y}',
+            url: 'http://localhost:3000/geofence_org_63908dd6/{z}/{x}/{y}',
             minZoom: 0,
             maxZoom: 14
         }

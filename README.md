@@ -43,9 +43,11 @@ The script generates a file named `sampleData.geojson` at `dataGeneration/data/s
 
 ---
 
-Martin goes here
+## 2: Database Setup & Martin Tile Server
 
-create data base 
+### Setting Up the PostGIS Database
+
+**1. Create and Start the Database**
 ```bash
 cd data
 
@@ -54,168 +56,113 @@ docker run --name eroad-db \
   -e POSTGRES_PASSWORD=1234 \
   -p 5432:5432 \
   -d postgis/postgis:16-3.4
-
 ```
 
-Populate database with geojson
+**2. Import GeoJSON Data**
 ```bash
 docker run --net=host -v "$(pwd)":/data ghcr.io/osgeo/gdal:ubuntu-full-3.6.3 \
   ogr2ogr -f "PostgreSQL" PG:"host=127.0.0.1 port=5432 user=postgres dbname=postgres password=1234" \
   /data/sampleData.geojson \
   -nln public.nz_data \
   -nlt PROMOTE_TO_MULTI
-
 ```
 
-Running martin
+---
+
+### Running Martin Tile Server
+
+**Basic Usage (Local Database)**
 ```bash
 docker run \
   -p 3000:3000 \
   -e DATABASE_URL=postgres://postgres:1234@host.docker.internal:5432/postgres \
   ghcr.io/maplibre/martin:1.0.0
-
 ```
 
-
----
-
-## 3: Frontend (React + MapLibre GL)
-
-A React TypeScript application that visualizes the generated vector tiles using MapLibre GL.
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-
-### Setup
-
-1. **Navigate to frontend folder**
+**With EROAD Test Database**
 ```bash
-cd frontend/react-ts
+docker run \
+  -p 3000:3000 \
+  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  ghcr.io/maplibre/martin:1.0.0
 ```
 
-2. **Install dependencies**
+**With Configuration File**
 ```bash
-npm install
-```
-
-3. **Configure Map**
-Update `src/config/mapConfig.ts` if needed:
-- `initialCenter`: Map center coordinates [lng, lat]
-- `initialZoom`: Initial zoom level
-- `sources.PLANETILER.url`: Tile server URL
-
-### Usage
-
-1. **Start Development Server**
-```bash
-npm run dev
-```
-
-2. **Build for Production**
-```bash
-npm run build
-```
-
-3. **Preview Production Build**
-```bash
-npm run preview
-```
-
-### Project Structure
-
-```
-frontend/react-ts/src/
-├── components/          # React components
-│   └── map.tsx         # Main map component
-├── config/             # Configuration files
-│   ├── mapConfig.ts    # Map settings (center, zoom, sources)
-│   └── mapStyles.ts    # Layer definitions and styling
-├── hooks/              # Custom React hooks
-│   └── useMap.ts       # Map initialization logic
-├── App.tsx             # Root component
-└── main.tsx            # Entry point
-```
-
-### Map Layers
-
-The frontend displays three layers from the vector tiles:
-
-- **Geofences** - Red filled polygons with 50% opacity
-- **Trips** - Blue lines (2px width)
-- **Stops** - Green circles (4px radius)
-
-### Customization
-
-**To change layer styles**, edit `src/config/mapStyles.ts`:
-
-```typescript
-export const MAP_LAYERS: LayerSpecification[] = [
-  {
-    id: 'geofences-layer',
-    type: 'fill',
-    'source-layer': 'geofences',
-    paint: {
-      'fill-color': '#ff0000',  // Change color
-      'fill-opacity': 0.5        // Change opacity
-    }
-  },
-  // ...
-];
-```
-
-**To change map center/zoom**, edit `src/config/mapConfig.ts`:
-
-```typescript
-export const MAP_CONFIG = {
-  initialCenter: [174.7633, -36.8485] as [number, number], // Auckland
-  initialZoom: 10,
-  // ...
-};
+docker run \
+  -p 3000:3000 \
+  -v $(pwd)/config.yaml:/config.yaml \
+  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  ghcr.io/maplibre/martin:1.0.0 \
+  --config /config.yaml
 ```
 
 ---
 
-## Full Pipeline Workflow
+### Martin Configuration (config.yaml)
 
-1. **Generate Data**
-```bash
-cd dataGeneration
-npx tsx main.ts
-# Creates dataGeneration/data/sampleData.geojson
-```
-2. **Generate Tiles**
-```bash
-cd planetiler
-java -jar target/planetiler-1.0-SNAPSHOT.jar --force --tile-compression=none
-# Creates tiles in planetiler/outputTiles/
-```
+To filter data by organization, create a `config.yaml` file:
 
-3. **Serve Tiles**
-```bash
-cd planetiler
-npx http-server outputTiles --cors -p 8080
-```
+```yaml
+postgres:
+  connection_string: "postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432"
+  default_srid: 4326
 
-4. **Start Frontend**
-```bash
-cd frontend/react-ts
-npm run dev
-# Open browser to http://localhost:5173
+  table: >
+    (
+      SELECT *
+      FROM geofence g
+      WHERE g.organisation = '63908dd6-80aa-4398-892f-13392a390ae8'
+    ) AS t
+  geometry_column: polygon
+  srid: 4326
 ```
 
 ---
 
-## Troubleshooting
+### Custom SQL Function (Advanced)
 
-### No Data Visible on Map
+For dynamic filtering by organization via URL parameters:
 
-1. **Check tile server is running**: Visit `http://localhost:8080/metadata.json`
-2. **Check CORS**: Ensure `http-server` started with `--cors` flag
-3. **Check layer names**: Verify `source-layer` in `mapStyles.ts` matches layers in `metadata.json`
-4. **Check zoom level**: Data is only visible at zoom levels 0-14
+```sql
+CREATE OR REPLACE FUNCTION public.geofences_by_org(
+  z integer,
+  x integer,
+  y integer,
+  query_params json
+)
+RETURNS bytea AS $$
+DECLARE
+  mvt bytea;
+BEGIN
+  SELECT INTO mvt ST_AsMVT(tile, 'geofences', 4096, 'geom')
+  FROM (
+    SELECT
+      g.gid AS id,
+      g.name,
+      g.start_date,
+      g.end_date,
+      g.organisation,
+      g.contains_public_road,
+      g.public_override_reason,
+      ST_AsMVTGeom(
+        ST_Transform(ST_CurveToLine(g.polygon), 3857),
+        ST_TileEnvelope(z, x, y),
+        4096,
+        64,
+        true
+      ) AS geom
+    FROM geofence g
+    WHERE
+      g.polygon && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
+      AND g.organisation = (query_params->>'organisation')::uuid
+  ) AS tile
+  WHERE geom IS NOT NULL;
 
-### 404 Errors in Browser Console
+  RETURN mvt;
+END
+$$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
+```
 
-This is normal for sparse data. Tiles are only generated where features exist.
+This function allows filtering geofences by passing `organisation` as a query parameter in the tile request.
 

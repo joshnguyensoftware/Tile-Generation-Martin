@@ -1,5 +1,5 @@
 
-export const TOTAL_FEATURES: number = 250000;
+export const TOTAL_FEATURES: number = 250;
 export const OUTPUT_PATH = 'data/sampleData.geojson';
 
 export const RATIOS = {
