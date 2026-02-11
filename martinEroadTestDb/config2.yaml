@@ -1,0 +1,5 @@
+postgres:
+  connection_string: "postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432"
+  default_srid: 4326
+  geometry_column: polygon
+  srid: 4326

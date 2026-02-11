@@ -1,0 +1,19 @@
+postgres:
+  connection_string: "postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432"
+  default_srid: 4326
+
+  table:  >
+      (
+        SELECT *
+        FROM geofence g
+        WHERE g.organisation = '63908dd6-80aa-4398-892f-13392a390ae8'
+      ) AS t
+  geometry_column: polygon
+  srid: 4326  
+
+
+
+
+    
+
+
