@@ -1,0 +1,8 @@
+services:
+  martin:
+    image: ghcr.io/maplibre/martin:1.0.0
+    container_name: martin
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence
