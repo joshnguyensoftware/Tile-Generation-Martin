@@ -83,7 +83,7 @@ docker run \
 ```bash
 docker run \
   -p 3000:3000 \
-  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  -e DATABASE_URL={DATABASE_URL}/geofence \
   ghcr.io/maplibre/martin:1.0.0
 ```
 
@@ -92,7 +92,7 @@ docker run \
 docker run \
   -p 3000:3000 \
   -v $(pwd)/config.yaml:/config.yaml \
-  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  -e DATABASE_URL={DATABASE_URL}/geofence \
   ghcr.io/maplibre/martin:1.0.0 \
   --config /config.yaml
 ```
@@ -105,14 +105,14 @@ To filter data by organization, create a `config.yaml` file:
 
 ```yaml
 postgres:
-  connection_string: "postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432"
+  connection_string: "{DATABASE_URL}"
   default_srid: 4326
 
   table: >
     (
       SELECT *
       FROM geofence g
-      WHERE g.organisation = '63908dd6-80aa-4398-892f-13392a390ae8'
+      WHERE g.organisation = '{ORG_ID}'
     ) AS t
   geometry_column: polygon
   srid: 4326
