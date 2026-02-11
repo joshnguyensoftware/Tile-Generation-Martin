@@ -71,11 +71,83 @@ Running martin
 ```bash
 docker run \
   -p 3000:3000 \
-  -e DATABASE_URL=postgres://postgres:1234@host.docker.internal:5432/postgres \
-  ghcr.io/maplibre/martin:1.0.0
-
+  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  ghcr.io/maplibre/martin:1.0.0 
 ```
 
+Running Martin With Eroad Test DB with config
+```bash
+docker run \
+  -p 3000:3000 \
+  -e DATABASE_URL=postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432/geofence \
+  ghcr.io/maplibre/martin:1.0.0 \
+  --config config2.yaml
+```
+
+If you only want to expose a certain organisation, configure martin to include a new catalog using config.yaml
+```bash
+postgres:
+  connection_string: "postgres://geofence:IjFf1-TtRFwQ3RB1HWu6MGngd8aWWphb@dbgeofencereadonly.test.erdmg.com:5432"
+  default_srid: 4326
+
+  table:  >
+      (
+        SELECT *
+        FROM geofence g
+        WHERE g.organisation = '63908dd6-80aa-4398-892f-13392a390ae8'
+      ) AS t
+  geometry_column: polygon
+  srid: 4326  
+```
+
+SQL Function
+```bash
+create or REPLACE 
+function public.geofences_by_org (
+	  z integer,
+	  x integer,
+	  y integer,
+	  query_params json		
+  )
+  returns bytea as $$
+  
+declare
+	 mvt bytea;
+begin
+	SELECT INTO mvt ST_AsMVT(tile, 'geofences', 4096, 'geom')
+	from (
+        select
+        	  g.gid AS id,
+		      g.name,
+		      g.start_date,
+		      g.end_date,
+		      g.organisation,
+		      g.contains_public_road,
+		      g.public_override_reason,
+		      ST_AsMVTGeom(
+		        ST_Transform(ST_CurveToLine(g.polygon), 3857),
+		        ST_TileEnvelope(z, x, y),
+		        4096,
+		        64,
+		        true
+      ) AS geom
+      FROM geofence g
+      
+      WHERE
+      g.polygon && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
+
+      AND g.organisation =
+        (query_params->>'organisation')::uuid
+		
+	) AS tile
+	 WHERE geom IS NOT NULL;
+	
+	 RETURN mvt;
+end
+$$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
+
+
+```
 
 ---
 

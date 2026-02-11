@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@turf/turf": "^7.3.0"
+    "@turf/turf": "^7.3.0",
+    "k6": "^0.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
